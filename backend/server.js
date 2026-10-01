@@ -36,6 +36,7 @@ app.use("/api/auth", require("./routes/auth"))
 app.use("/api/rooms", require("./routes/room"))
 app.use("/api/messages", require("./routes/message"))
 app.use("/api/users", require("./routes/user"))
+app.use("/api/push", require("./routes/push"))
 
 // Health check route
 app.get("/api/health", (req, res) => {

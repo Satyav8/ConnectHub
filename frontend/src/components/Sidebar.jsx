@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react"
 import { useSocket } from "../context/SocketContext.jsx"
 import { getRooms, getMyRooms, createRoom, joinRoom, getUsers } from "../utils/api.js"
+import { useIsMobile } from "../hooks/useIsMobile.js"
+import AppControls from "./AppControls.jsx"
 
 function Sidebar({ user, activeRoom, activeDM, onSelectRoom, onSelectDM, onLogout }) {
   const { isUserOnline } = useSocket()
+  const isMobile = useIsMobile()
 
   const [rooms, setRooms] = useState([])
   const [myRooms, setMyRooms] = useState([])
@@ -70,7 +73,7 @@ function Sidebar({ user, activeRoom, activeDM, onSelectRoom, onSelectDM, onLogou
     myRooms.some((r) => r._id === roomId)
 
   return (
-    <div style={styles.sidebar}>
+    <div style={{ ...styles.sidebar, width: isMobile ? "100%" : "280px" }}>
       <div style={styles.edge} />
 
       {/* Header */}
@@ -87,6 +90,9 @@ function Sidebar({ user, activeRoom, activeDM, onSelectRoom, onSelectDM, onLogou
           [ EXIT ]
         </button>
       </div>
+
+      {/* Notifications + install */}
+      <AppControls />
 
       {/* Tabs */}
       <div style={styles.tabs}>
@@ -312,7 +318,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     borderRight: "1px solid #1f1f1f",
-    height: "100vh",
+    height: "100%",
     overflow: "hidden",
   },
   edge: {
@@ -326,7 +332,7 @@ const styles = {
     zIndex: 1,
   },
   header: {
-    padding: "18px 16px 16px 20px",
+    padding: "calc(18px + env(safe-area-inset-top)) 16px 16px 20px",
     borderBottom: "1px solid #1f1f1f",
     display: "flex",
     justifyContent: "space-between",
@@ -394,7 +400,7 @@ const styles = {
   content: {
     flex: 1,
     overflowY: "auto",
-    padding: "12px 12px 12px 14px",
+    padding: "12px 12px calc(12px + env(safe-area-inset-bottom)) 14px",
   },
   createBtn: {
     width: "100%",

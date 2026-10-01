@@ -58,4 +58,10 @@ export const markDirectMessagesRead = (userId) =>
 export const getUsers = () => api.get("/users")
 export const getUserById = (id) => api.get(`/users/${id}`)
 
+export const getVapidPublicKey = () => api.get("/push/vapid-public-key")
+export const savePushSubscription = (subscription) =>
+  api.post("/push/subscribe", subscription)
+export const removePushSubscription = (endpoint) =>
+  api.post("/push/unsubscribe", { endpoint })
+
 export default api

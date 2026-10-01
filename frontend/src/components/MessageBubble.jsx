@@ -30,7 +30,7 @@ function MessageBubble({ message, isOwn }) {
       </div>
 
       {/* Bubble */}
-      <div style={{ maxWidth: "65%", minWidth: 0 }}>
+      <div style={{ maxWidth: "65%", minWidth: 0 }} className="msg-col">
         {!isOwn && (
           <p style={styles.senderName}>
             <span style={{ color: "#3d3d4a" }}>&lt;</span>

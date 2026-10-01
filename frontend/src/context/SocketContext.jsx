@@ -18,9 +18,15 @@ export function SocketProvider({ children }) {
       auth: { token: user.token },
     })
 
+    // Tell the server whether the app is on screen, so it knows when to push
+    const reportAppState = () =>
+      newSocket.emit("app-state", { active: document.visibilityState === "visible" })
+
     newSocket.on("connect", () => {
       console.log("Socket connected:", newSocket.id)
+      reportAppState()
     })
+    document.addEventListener("visibilitychange", reportAppState)
 
     newSocket.on("connect_error", (err) => {
       console.error("Socket connection error:", err.message)
@@ -45,6 +51,7 @@ export function SocketProvider({ children }) {
 
     // Cleanup on logout or token change
     return () => {
+      document.removeEventListener("visibilitychange", reportAppState)
       newSocket.disconnect()
     }
   }, [user?.token])

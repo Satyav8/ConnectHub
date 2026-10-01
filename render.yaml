@@ -13,3 +13,9 @@ services:
         generateValue: true
       - key: CLIENT_URL
         sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: https://connecthub.work

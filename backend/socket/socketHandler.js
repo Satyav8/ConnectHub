@@ -2,11 +2,30 @@ const jwt = require("jsonwebtoken")
 const User = require("../models/User")
 const Message = require("../models/Message")
 const DirectMessage = require("../models/DirectMessage")
+const Room = require("../models/Room")
+const { sendPushToUsers } = require("../utils/push")
 
 // Store online users: { userId: socketId }
 const onlineUsers = new Map()
 
+const preview = (text) => (text.length > 140 ? `${text.slice(0, 137)}...` : text)
+
 module.exports = (io) => {
+
+  // Users looking at the app get an in-app notice over the socket;
+  // everyone else gets a push notification on their devices
+  async function notifyUsers(userIds, payload) {
+    const activeUserIds = new Set()
+    for (const s of io.sockets.sockets.values()) {
+      const id = s.user._id.toString()
+      if (s.data.active && userIds.includes(id)) {
+        activeUserIds.add(id)
+        s.emit("notify", payload)
+      }
+    }
+    const inactive = userIds.filter((id) => !activeUserIds.has(id))
+    await sendPushToUsers(inactive, payload)
+  }
 
   // ─── Auth Middleware for Socket.io ───────────────────────────
   io.use(async (socket, next) => {
@@ -38,11 +57,19 @@ module.exports = (io) => {
 
     const userId = socket.user._id.toString()
 
+    // Assume the app is in the foreground until the client says otherwise
+    socket.data.active = true
+    socket.on("app-state", ({ active }) => {
+      socket.data.active = Boolean(active)
+    })
+
     // Add to online users map
     onlineUsers.set(userId, socket.id)
 
-    // Update user status in DB
-    await User.findByIdAndUpdate(userId, { status: "online" })
+    // Update user status in DB — not awaited, so the event handlers below are
+    // registered immediately and events sent right after connecting aren't dropped
+    User.findByIdAndUpdate(userId, { status: "online" })
+      .catch((err) => console.error("Status update failed:", err.message))
 
     // Broadcast to everyone that this user is online
     io.emit("user-online", {
@@ -70,6 +97,11 @@ module.exports = (io) => {
       await systemMessage.populate("sender", "name avatar")
 
       io.to(roomId).emit("receive-message", systemMessage)
+    })
+
+    // ─── Rejoin Room (after a reconnect — no "joined" message) ──
+    socket.on("rejoin-room", (roomId) => {
+      socket.join(roomId)
     })
 
     // ─── Leave Room ─────────────────────────────────────────────
@@ -106,6 +138,21 @@ module.exports = (io) => {
 
         // Broadcast to everyone in the room including sender
         io.to(roomId).emit("receive-message", message)
+
+        // Notify the other room members
+        const room = await Room.findById(roomId).select("name members")
+        if (room) {
+          const recipients = room.members
+            .map((m) => m.toString())
+            .filter((id) => id !== userId)
+          notifyUsers(recipients, {
+            title: `# ${room.name}`,
+            body: `${socket.user.name}: ${preview(message.content)}`,
+            tag: `room-${roomId}`,
+            url: `/chat?room=${roomId}`,
+            chat: { type: "room", id: roomId },
+          }).catch((err) => console.error("Notify failed:", err.message))
+        }
 
       } catch (error) {
         socket.emit("error", { message: "Failed to send message" })
@@ -150,6 +197,14 @@ module.exports = (io) => {
         if (receiverSocketId) {
           io.to(receiverSocketId).emit("receive-direct-message", message)
         }
+
+        notifyUsers([receiverId.toString()], {
+          title: socket.user.name,
+          body: preview(message.content),
+          tag: `dm-${userId}`,
+          url: `/chat?dm=${userId}`,
+          chat: { type: "dm", id: userId },
+        }).catch((err) => console.error("Notify failed:", err.message))
 
       } catch (error) {
         socket.emit("error", { message: "Failed to send direct message" })

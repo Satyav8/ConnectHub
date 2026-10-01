@@ -3,7 +3,7 @@ import { useSocket } from "../context/SocketContext.jsx"
 import { getRoomMessages, getDirectMessages } from "../utils/api.js"
 import MessageBubble from "./MessageBubble.jsx"
 
-function ChatWindow({ activeRoom, activeDM, user }) {
+function ChatWindow({ activeRoom, activeDM, user, onBack }) {
   const { socket } = useSocket()
   const [messages, setMessages] = useState([])
   const [content, setContent] = useState("")
@@ -34,13 +34,30 @@ function ChatWindow({ activeRoom, activeDM, user }) {
   useEffect(() => {
     if (!socket) return
 
+    // Only show messages that belong to the chat on screen
     socket.on("receive-message", (message) => {
+      if (!activeRoom || (message.room?._id ?? message.room) !== activeRoom._id) return
       setMessages((prev) => [...prev, message])
     })
 
     socket.on("receive-direct-message", (message) => {
+      const senderId = message.sender?._id ?? message.sender
+      const receiverId = message.receiver?._id ?? message.receiver
+      if (!activeDM || (senderId !== activeDM._id && receiverId !== activeDM._id)) return
       setMessages((prev) => [...prev, message])
     })
+
+    // After a dropped connection (phone backgrounded, network blip), get back
+    // into the room and pick up anything missed while disconnected
+    const onReconnect = () => {
+      if (activeRoom) {
+        socket.emit("rejoin-room", activeRoom._id)
+        loadRoomMessages()
+      } else if (activeDM) {
+        loadDirectMessages()
+      }
+    }
+    socket.on("connect", onReconnect)
 
     socket.on("user-typing", ({ name, roomId }) => {
       if (activeRoom && roomId === activeRoom._id) {
@@ -57,12 +74,13 @@ function ChatWindow({ activeRoom, activeDM, user }) {
     })
 
     return () => {
+      socket.off("connect", onReconnect)
       socket.off("receive-message")
       socket.off("receive-direct-message")
       socket.off("user-typing")
       socket.off("user-stop-typing")
     }
-  }, [socket, activeRoom?._id])
+  }, [socket, activeRoom?._id, activeDM?._id])
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -138,7 +156,18 @@ function ChatWindow({ activeRoom, activeDM, user }) {
 
       {/* Header */}
       <div style={styles.header}>
-        <div style={{ minWidth: 0 }}>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            style={styles.backBtn}
+            className="cyber-ghost"
+            aria-label="Back to channels"
+          >
+            ‹
+          </button>
+        )}
+        <div style={{ minWidth: 0, flex: 1 }}>
           <h2
             style={{
               ...styles.title,
@@ -150,7 +179,7 @@ function ChatWindow({ activeRoom, activeDM, user }) {
           </h2>
           <p style={styles.subtitle}>{subtitle}</p>
         </div>
-        <div style={styles.headerStatus}>
+        <div style={styles.headerStatus} className="hide-mobile">
           <span style={styles.statusDot} className="cyber-pulse" />
           LINK_ACTIVE
         </div>
@@ -230,17 +259,33 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    height: "100vh",
+    height: "100%",
     overflow: "hidden",
   },
   header: {
     position: "relative",
-    padding: "14px 20px",
+    padding: "calc(14px + env(safe-area-inset-top)) 20px 14px",
     backgroundColor: "#111111",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: "12px",
+  },
+  backBtn: {
+    width: "36px",
+    height: "36px",
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    border: "1px solid #ff2d78",
+    color: "#ff2d78",
+    fontSize: "26px",
+    lineHeight: 1,
+    paddingBottom: "3px",
+    cursor: "pointer",
+    textShadow: "0 0 8px #ff2d78",
   },
   headerLine: {
     position: "absolute",
@@ -324,7 +369,7 @@ const styles = {
   inputRow: {
     display: "flex",
     gap: "10px",
-    padding: "14px 20px",
+    padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
     borderTop: "1px solid #1f1f1f",
     backgroundColor: "#111111",
   },

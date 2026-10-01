@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react"
 import { loginUser, registerUser } from "../utils/api.js"
+import { disablePush, syncPushSubscription } from "../utils/push.js"
 
 const AuthContext = createContext(null)
 
@@ -18,6 +19,7 @@ export function AuthProvider({ children }) {
     const { data } = await loginUser({ email, password })
     setUser(data)
     localStorage.setItem("connecthub_user", JSON.stringify(data))
+    syncPushSubscription()
     return data
   }
 
@@ -25,10 +27,13 @@ export function AuthProvider({ children }) {
     const { data } = await registerUser({ name, email, password })
     setUser(data)
     localStorage.setItem("connecthub_user", JSON.stringify(data))
+    syncPushSubscription()
     return data
   }
 
-  function logout() {
+  async function logout() {
+    // Stop this device getting the old account's notifications (needs the token, so before clearing)
+    await disablePush().catch(() => {})
     setUser(null)
     localStorage.removeItem("connecthub_user")
     window.location.href = "/login"
