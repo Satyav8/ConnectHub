@@ -4,15 +4,22 @@ import Login from "./pages/Login.jsx"
 import Register from "./pages/Register.jsx"
 import Chat from "./pages/Chat.jsx"
 import NotFound from "./pages/NotFound.jsx"
+import Landing from "./pages/Landing.jsx"
+import { isNative } from "./utils/nativePush.js"
 
 function App() {
   const { user } = useAuth()
 
   return (
     <Routes>
+      {/* Website: download/landing page. Android app: straight into the app */}
       <Route
         path="/"
-        element={user ? <Navigate to="/chat" /> : <Navigate to="/login" />}
+        element={
+          isNative
+            ? (user ? <Navigate to="/chat" /> : <Navigate to="/login" />)
+            : <Landing />
+        }
       />
       <Route
         path="/login"

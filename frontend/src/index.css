@@ -179,6 +179,38 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Landing page responsiveness */
+@media (max-width: 960px) {
+  .landing-hero {
+    grid-template-columns: 1fr !important;
+    gap: 56px !important;
+    padding-top: 16px !important;
+  }
+
+  .landing-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .landing-h1 {
+    font-size: 44px !important;
+  }
+
+  .landing-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-cta > * {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .landing-notif {
+    right: 0 !important;
+  }
+}
+
 @media (max-width: 768px) {
   /* 16px stops iOS zooming in when an input is focused */
   input, textarea {

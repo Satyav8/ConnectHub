@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { io } from "socket.io-client"
 import { useAuth } from "./AuthContext.jsx"
 import { SERVER_URL } from "../utils/api.js"
+import { App } from "@capacitor/app"
+import { isNative } from "../utils/nativePush.js"
 
 const SocketContext = createContext(null)
 
@@ -28,6 +30,14 @@ export function SocketProvider({ children }) {
     })
     document.addEventListener("visibilitychange", reportAppState)
 
+    // In the Android app, foreground/background comes from the native app lifecycle
+    let appStateHandle = null
+    if (isNative) {
+      App.addListener("appStateChange", ({ isActive }) => {
+        newSocket.emit("app-state", { active: isActive })
+      }).then((h) => { appStateHandle = h })
+    }
+
     newSocket.on("connect_error", (err) => {
       console.error("Socket connection error:", err.message)
     })
@@ -52,6 +62,7 @@ export function SocketProvider({ children }) {
     // Cleanup on logout or token change
     return () => {
       document.removeEventListener("visibilitychange", reportAppState)
+      appStateHandle?.remove()
       newSocket.disconnect()
     }
   }, [user?.token])

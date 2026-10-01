@@ -63,5 +63,9 @@ export const savePushSubscription = (subscription) =>
   api.post("/push/subscribe", subscription)
 export const removePushSubscription = (endpoint) =>
   api.post("/push/unsubscribe", { endpoint })
+export const saveNativeToken = (token) =>
+  api.post("/push/native-subscribe", { token, platform: "android" })
+export const removeNativeToken = (token) =>
+  api.post("/push/native-unsubscribe", { token })
 
 export default api

@@ -1,4 +1,9 @@
 import { getVapidPublicKey, savePushSubscription, removePushSubscription } from "./api.js"
+import {
+  isNative, getNativePushState, enableNativePush, disableNativePush, syncNativePush,
+} from "./nativePush.js"
+
+// In the Android app every function below hands off to the Firebase version in nativePush.js
 
 export const isIOS = () =>
   /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -12,7 +17,7 @@ const pushSupported = () =>
   "serviceWorker" in navigator && "PushManager" in window && "Notification" in window
 
 export function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) return
+  if (isNative || !("serviceWorker" in navigator)) return
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch((err) =>
       console.error("Service worker registration failed:", err)
@@ -22,6 +27,7 @@ export function registerServiceWorker() {
 
 // "on" | "off" | "denied" | "needs-install" (iOS only allows push from the home-screen app) | "unsupported"
 export async function getPushState() {
+  if (isNative) return getNativePushState()
   if (isIOS() && !isStandalone()) return "needs-install"
   if (!pushSupported()) return "unsupported"
   if (Notification.permission === "denied") return "denied"
@@ -40,6 +46,7 @@ function urlBase64ToUint8Array(base64) {
 
 // Must be called from a click/tap — browsers block permission prompts otherwise
 export async function enablePush() {
+  if (isNative) return enableNativePush()
   const permission = await Notification.requestPermission()
   if (permission !== "granted") return permission === "denied" ? "denied" : "off"
 
@@ -57,6 +64,7 @@ export async function enablePush() {
 }
 
 export async function disablePush() {
+  if (isNative) return disableNativePush()
   if (!pushSupported()) return "off"
   const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.getSubscription()
@@ -69,6 +77,7 @@ export async function disablePush() {
 
 // Re-link this device to whoever is logged in now (e.g. after switching accounts)
 export async function syncPushSubscription() {
+  if (isNative) return syncNativePush().catch(() => {})
   if (!pushSupported() || Notification.permission !== "granted") return
   const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.getSubscription()

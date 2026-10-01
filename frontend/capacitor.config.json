@@ -1,0 +1,19 @@
+{
+  "appId": "work.connecthub.app",
+  "appName": "ConnectHub",
+  "webDir": "dist",
+  "backgroundColor": "#0d0d0d",
+  "android": {
+    "backgroundColor": "#0d0d0d"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "DARK"
+    },
+    "PushNotifications": {
+      "presentationOptions": []
+    }
+  }
+}

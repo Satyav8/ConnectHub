@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx"
 import { useSocket } from "../context/SocketContext.jsx"
 import { useIsMobile } from "../hooks/useIsMobile.js"
 import { getRoomById, getUserById } from "../utils/api.js"
+import { consumePendingChat } from "../utils/nativePush.js"
 import Sidebar from "../components/Sidebar.jsx"
 import ChatWindow from "../components/ChatWindow.jsx"
 
@@ -77,6 +78,18 @@ function Chat() {
     }
     navigator.serviceWorker.addEventListener("message", onMessage)
     return () => navigator.serviceWorker.removeEventListener("message", onMessage)
+  }, [openChat])
+
+  // Android app: notification taps (including the one that launched the app)
+  useEffect(() => {
+    const launched = consumePendingChat()
+    if (launched) openChat(launched)
+    const onOpen = () => {
+      const chat = consumePendingChat()
+      if (chat) openChat(chat)
+    }
+    window.addEventListener("connecthub:open-chat", onOpen)
+    return () => window.removeEventListener("connecthub:open-chat", onOpen)
   }, [openChat])
 
   // In-app notice for messages in chats you're not looking at

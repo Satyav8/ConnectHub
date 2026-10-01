@@ -19,16 +19,23 @@ const app = express()
 // Create HTTP server (needed for Socket.io)
 const server = http.createServer(app)
 
+// Allowed origins: the website, plus the Android app (Capacitor serves it from https://localhost)
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://localhost",
+  "capacitor://localhost",
+].filter(Boolean)
+
 // Create Socket.io instance
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
 })
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL }))
+app.use(cors({ origin: allowedOrigins }))
 app.use(express.json())
 
 // Routes (we'll fill these in next steps)

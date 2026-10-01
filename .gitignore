@@ -4,3 +4,5 @@ dist
 .env.*
 *.log
 .claude
+.signing
+!frontend/.env.native
