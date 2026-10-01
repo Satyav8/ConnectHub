@@ -1,0 +1,179 @@
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap");
+
+:root {
+  --bg: #0d0d0d;
+  --panel: #111111;
+  --border: #1f1f1f;
+  --pink: #ff2d78;
+  --cyan: #00f5ff;
+  --purple: #bf00ff;
+  --text: #e6e6e6;
+  --muted: #6b6b7b;
+  --font-ui: "Rajdhani", sans-serif;
+  --font-mono: "Share Tech Mono", monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(0, 245, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+input, button, textarea {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--pink);
+  color: var(--bg);
+}
+
+/* ---------- Scrollbar ---------- */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pink) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--pink);
+  box-shadow: 0 0 6px var(--pink), 0 0 12px var(--pink);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan), 0 0 12px var(--cyan);
+}
+
+/* ---------- Shared cyber utilities ---------- */
+
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(255, 45, 120, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 45, 120, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.cyber-input {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cyber-input::placeholder {
+  color: #3d3d4a;
+  font-family: var(--font-mono);
+}
+
+.cyber-input:focus {
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 14px rgba(0, 245, 255, 0.35);
+}
+
+.cyber-terminal {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cyber-terminal:focus-within {
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 16px rgba(0, 245, 255, 0.3);
+}
+
+.cyber-terminal input::placeholder {
+  color: #3d3d4a;
+}
+
+.cyber-btn {
+  transition: box-shadow 0.2s, filter 0.2s, transform 0.1s;
+}
+
+.cyber-btn:not(:disabled):hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 12px rgba(255, 45, 120, 0.6), 0 0 28px rgba(191, 0, 255, 0.35);
+}
+
+.cyber-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.cyber-ghost {
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.cyber-ghost:hover {
+  background: rgba(255, 45, 120, 0.12) !important;
+  box-shadow: 0 0 10px rgba(255, 45, 120, 0.4);
+}
+
+.cyber-item {
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cyber-item:hover {
+  background: rgba(0, 245, 255, 0.05);
+}
+
+.cyber-link {
+  transition: text-shadow 0.2s;
+}
+
+.cyber-link:hover {
+  text-shadow: 0 0 8px var(--cyan), 0 0 16px var(--cyan);
+}
+
+.cyber-blink {
+  animation: cyber-blink 1s steps(1) infinite;
+}
+
+.cyber-pulse {
+  animation: cyber-pulse 2s ease-in-out infinite;
+}
+
+.cyber-flicker {
+  animation: cyber-flicker 4s linear infinite;
+}
+
+@keyframes cyber-blink {
+  50% { opacity: 0; }
+}
+
+@keyframes cyber-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes cyber-flicker {
+  0%, 19%, 21%, 23%, 54%, 56%, 100% { opacity: 1; }
+  20%, 22%, 55% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-blink, .cyber-pulse, .cyber-flicker {
+    animation: none;
+  }
+}
